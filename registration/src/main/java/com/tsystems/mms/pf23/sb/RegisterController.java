@@ -1,8 +1,10 @@
 package com.tsystems.mms.pf23.sb;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,9 @@ import javax.validation.Valid;
  */
 @Controller
 public class RegisterController extends WebMvcConfigurerAdapter {
+    @Autowired
+    SubscriberRepository repository;
+
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/subscribed").setViewName("subscribed");
@@ -33,6 +38,13 @@ public class RegisterController extends WebMvcConfigurerAdapter {
         if (bindingResult.hasErrors()) {
             return "register";
         }
+
+        if (null != repository.findByEmail(subscriber.getEmail())) {
+            bindingResult.addError(new FieldError("subscriber", "email", "email [" + subscriber.getEmail() + "] already registered"));
+            return "register";
+        }
+
+        repository.saveAndFlush(subscriber);
 
         return "redirect:/subscribed";
     }
